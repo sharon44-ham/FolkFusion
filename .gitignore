@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+static/uploads/*
+!static/uploads/.gitkeep
+static/converted/*
+!static/converted/.gitkeep
+try/
+stati

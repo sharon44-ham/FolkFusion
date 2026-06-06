@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ style }} Result — FolkFusion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #FDF6EC;
+      color: #3B1F0A;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    nav {
+      text-align: center;
+      margin-bottom: 32px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    nav a {
+      color: #C0392B;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    nav a:hover { text-decoration: underline; }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      color: #C0392B;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #7D5A3C;
+      margin-bottom: 36px;
+    }
+    .comparison {
+      display: flex;
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .img-card {
+      flex: 1;
+      min-width: 280px;
+      max-width: 460px;
+      text-align: center;
+    }
+    .img-card p {
+      font-size: 0.95rem;
+      color: #7D5A3C;
+      margin-bottom: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .img-card img {
+      width: 100%;
+      border-radius: 12px;
+      border: 3px solid #E8C46A;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .actions {
+      text-align: center;
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: #C0392B; color: white; }
+    .btn-primary:hover { background: #A93226; }
+    .btn-secondary { background: #fff; color: #3B1F0A; border: 2px solid #E8C46A; }
+    .btn-secondary:hover { background: #FDF3E3; }
+    .other-styles h2 {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #7D5A3C;
+      margin-bottom: 16px;
+    }
+    .style-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .style-chip {
+      background: #fff;
+      border: 2px solid #E8C46A;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #3B1F0A;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .style-chip:hover {
+      background: #C0392B;
+      border-color: #C0392B;
+      color: white;
+    }
+    .style-chip.active {
+      background: #E8C46A;
+      border-color: #E8C46A;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/">&#8592; Upload new image</a>
+    <a href="{{ url_for('show', filename=original) }}">&#9998; Try other styles</a>
+  </nav>
+
+  <h1>&#127774; FolkFusion</h1>
+  <p class="subtitle">Reimagined in the <strong>{{ style }}</strong> tradition</p>
+
+  <div class="comparison">
+    <div class="img-card">
+      <p>Original</p>
+      <img src="{{ url_for('static', filename='uploads/' + original) }}" alt="Original">
+    </div>
+    <div class="img-card">
+      <p>{{ style }}</p>
+      <img src="{{ url_for('static', filename='converted/' + converted) }}" alt="{{ style }} version">
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('static', filename='converted/' + converted) }}" download>
+      &#8595; Download
+    </a>
+    <a class="btn btn-secondary" href="{{ url_for('show', filename=original) }}">
+      Try another style
+    </a>
+  </div>
+
+  <div class="other-styles">
+    <h2>Other styles:</h2>
+    <div class="style-row">
+      {% for key, info in styles.items() %}
+      <a class="style-chip {% if key == current_style %}active{% endif %}"
+         href="{{ url_for('convert', filename=original, style=key) }}">
+        {{ info.label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generating {{ style_label }} — FolkFusion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #FDF6EC;
+      color: #3B1F0A;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    h1 { font-size: 2rem; color: #C0392B; margin-bottom: 12px; }
+    .subtitle { color: #7D5A3C; font-size: 1.05rem; margin-bottom: 48px; }
+    .spinner {
+      width: 64px; height: 64px;
+      border: 6px solid #E8C46A;
+      border-top-color: #C0392B;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 32px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status {
+      font-size: 1rem;
+      color: #7D5A3C;
+      margin-bottom: 8px;
+    }
+    .note {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    .error-box {
+      display: none;
+      background: #FDEDEC;
+      border: 1px solid #E74C3C;
+      color: #922B21;
+      padding: 16px 24px;
+      border-radius: 8px;
+      margin-top: 24px;
+      max-width: 400px;
+    }
+    a { color: #C0392B; }
+  </style>
+</head>
+<body>
+  <h1>&#127774; FolkFusion</h1>
+  <p class="subtitle">Applying <strong>{{ style_label }}</strong> style…</p>
+  <div class="spinner" id="spinner"></div>
+  <p class="status" id="status">Sending to AI model…</p>
+  <p class="note">This usually takes 20–60 seconds.</p>
+  <div class="error-box" id="error-box">
+    <strong>Something went wrong:</strong><br>
+    <span id="error-msg"></span><br><br>
+    <a href="{{ url_for('show', filename=filename) }}">&#8592; Try again</a>
+  </div>
+
+  <script>
+    (async () => {
+      const status = document.getElementById('status');
+      const errorBox = document.getElementById('error-box');
+      const errorMsg = document.getElementById('error-msg');
+
+      try {
+        status.textContent = 'AI model is painting your image…';
+        const res = await fetch('/process/{{ filename }}/{{ style }}', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        status.textContent = 'Done! Loading result…';
+        window.location.href = data.result;
+      } catch (err) {
+        document.getElementById('spinner').style.display = 'none';
+        errorMsg.textContent = err.message;
+        errorBox.style.display = 'block';
+        status.textContent = '';
+      }
+    })();
+  </script>
+</body>
+</html>
