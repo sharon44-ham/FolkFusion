@@ -2,3 +2,4 @@ flask
 pillow
 python-dotenv
 requests
+gradio_client

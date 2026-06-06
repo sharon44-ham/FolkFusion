@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from PIL import Image
 from dotenv import load_dotenv
+from gradio_client import Client, handle_file
 
 load_dotenv()
 
@@ -80,15 +81,22 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def run_style_transfer(src_path: Path, style: str) -> Path:
-    style_info = STYLES[style]
-    stem = src_path.stem
-    out_path = CONVERTED_FOLDER / f"{stem}_{style}.png"
+def run_via_colab(src_path: Path, style: str, out_path: Path) -> Path:
+    colab_url = os.environ.get('COLAB_URL')
+    client = Client(colab_url)
+    result = client.predict(
+        image=handle_file(str(src_path)),
+        prompt=STYLES[style]['prompt'],
+        image_guidance=1.5,
+        guidance=7.5,
+        steps=25,
+        api_name="/predict",
+    )
+    Image.open(result).save(out_path)
+    return out_path
 
-    if out_path.exists():
-        return out_path
 
-    # Resize to 512x512 max (Stable Horde requirement)
+def run_via_horde(src_path: Path, style: str, out_path: Path) -> Path:
     img = Image.open(src_path).convert('RGB')
     img.thumbnail((512, 512), Image.LANCZOS)
     buf = io.BytesIO()
@@ -96,9 +104,8 @@ def run_style_transfer(src_path: Path, style: str) -> Path:
     img_b64 = base64.b64encode(buf.getvalue()).decode()
 
     headers = {"apikey": HORDE_KEY, "Content-Type": "application/json"}
-
     payload = {
-        "prompt": style_info['prompt'],
+        "prompt": STYLES[style]['prompt'],
         "params": {
             "steps": 30,
             "cfg_scale": 10,
@@ -118,12 +125,10 @@ def run_style_transfer(src_path: Path, style: str) -> Path:
     resp.raise_for_status()
     job_id = resp.json()['id']
 
-    # Poll until done (max ~4 minutes)
     for _ in range(80):
         time.sleep(3)
-        check = requests.get(f"{HORDE_API}/generate/check/{job_id}",
-                             headers=headers, timeout=10)
-        if check.json().get('done'):
+        if requests.get(f"{HORDE_API}/generate/check/{job_id}",
+                        headers=headers, timeout=10).json().get('done'):
             break
 
     result = requests.get(f"{HORDE_API}/generate/status/{job_id}",
@@ -132,9 +137,18 @@ def run_style_transfer(src_path: Path, style: str) -> Path:
     if not generations:
         raise Exception("Stable Horde returned no image. Try again.")
 
-    img_data = base64.b64decode(generations[0]['img'])
-    out_path.write_bytes(img_data)
+    out_path.write_bytes(base64.b64decode(generations[0]['img']))
     return out_path
+
+
+def run_style_transfer(src_path: Path, style: str) -> Path:
+    out_path = CONVERTED_FOLDER / f"{src_path.stem}_{style}.png"
+    if out_path.exists():
+        return out_path
+
+    if os.environ.get('COLAB_URL'):
+        return run_via_colab(src_path, style, out_path)
+    return run_via_horde(src_path, style, out_path)
 
 
 @app.route('/')

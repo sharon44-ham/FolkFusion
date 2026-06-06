@@ -1,6 +1,6 @@
 # FolkFusion
 
-FolkFusion bridges the present with India's timeless folk art traditions. Upload any photo or modern artwork and have it reimagined in one of five authentic Indian folk art styles — preserving cultural heritage through every transformation.
+FolkFusion bridges the present with India's timeless folk art traditions. Upload any artwork or image and have it reimagined in one of five authentic Indian folk art styles — preserving cultural heritage through every transformation.
 
 ## What it does
 
@@ -19,9 +19,10 @@ Upload an image → choose a traditional art form → get back your image reinte
 ## How it works
 
 - Built with **Flask** (Python)
-- Style transfer powered by **Stable Horde** — a free volunteer GPU network
-- Uses Stable Diffusion img2img with folk art style prompts
-- No GPU or paid API needed to run
+- Two backends supported:
+  - **Google Colab** (recommended) — runs `instruct-pix2pix` on a free T4 GPU, exposed via Gradio
+  - **Stable Horde** (fallback) — free volunteer GPU network, no setup needed
+- If `COLAB_URL` is set in `.env`, Colab is used. Otherwise falls back to Stable Horde automatically.
 
 ## Setup
 
@@ -35,7 +36,8 @@ pip install -r requirements.txt
 
 Create a `.env` file:
 ```
-HORDE_API_KEY=your_key_here   # optional — anonymous key works, registered key is faster
+HORDE_API_KEY=0000000000
+COLAB_URL=                   # paste your gradio.live URL here when using Colab
 ```
 
 Run:
@@ -45,6 +47,15 @@ python3 app.py
 
 Open `http://localhost:5000`
 
-## Get a free Stable Horde key
+## Using the Colab backend (better results)
 
-Register at [stablehorde.net](https://stablehorde.net) for a free account. Registered users get higher queue priority. The anonymous key (`0000000000`) works too but may be slower during peak hours.
+1. Upload `colab_server.ipynb` to [Google Colab](https://colab.research.google.com)
+2. Set runtime to **T4 GPU** (Runtime → Change runtime type)
+3. Run both cells — takes ~5 minutes to load the model
+4. Copy the `gradio.live` URL printed at the end
+5. Paste it into `.env` as `COLAB_URL=https://xxxx.gradio.live`
+6. Restart Flask
+
+## Using the Stable Horde fallback
+
+No setup needed. The anonymous key (`0000000000`) works out of the box. Register at [stablehorde.net](https://stablehorde.net) for a free account to get higher queue priority.
