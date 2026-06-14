@@ -23,15 +23,28 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 HORDE_API = "https://stablehorde.net/api/v2"
 HORDE_KEY = os.environ.get("HORDE_API_KEY", "0000000000")  # anonymous key works
 
+# ── Inference parameters ──────────────────────────────────────────────────────
+# image_guidance_scale: lower = more stylistic change, higher = more original preserved
+# guidance_scale: higher = stronger adherence to the style prompt
+# num_inference_steps: more = better quality (costs time on Colab T4)
+INFERENCE_CONFIG = {
+    'strength': 0.65,       # how much to transform (0=no change, 1=ignore original completely)
+    'guidance_scale': 12.0, # how strongly to follow the style prompt
+    'num_inference_steps': 40,
+}
+
 STYLES = {
     'warli': {
         'label': 'Warli',
         'desc': 'Maharashtra tribal art',
         'origin': 'Maharashtra, India',
         'prompt': (
-            'Transform this into Warli tribal folk art from Maharashtra, India. '
-            'White geometric stick figures, circles, triangles and squares on a dark '
-            'terracotta brown background. Minimal, sacred, handpainted tribal style.'
+            'Transform into Warli tribal folk painting from Maharashtra India. '
+            'Minimalist white geometric stick figures — circles for heads, triangles '
+            'for torsos — arranged in ritual dance and harvest scenes. '
+            'Dark terracotta mud-brown background. '
+            'No shading, no gradients, pure flat two-tone composition, '
+            'handpainted on mud wall texture, sacred tribal aesthetic.'
         ),
     },
     'madhubani': {
@@ -39,9 +52,12 @@ STYLES = {
         'desc': 'Bihar folk painting',
         'origin': 'Mithila, Bihar, India',
         'prompt': (
-            'Transform this into a Madhubani folk painting from Mithila, Bihar, India. '
-            'Vibrant saturated colors, bold black outlines, intricate floral and animal '
-            'motifs, fish and peacock patterns, traditional handpainted style.'
+            'Transform into Madhubani Mithila folk painting from Bihar India. '
+            'Bold black ink outlines filled with vivid flat colors — crimson, saffron, '
+            'emerald, indigo, golden yellow. '
+            'Symmetrical composition with intricate fish, lotus, peacock and elephant motifs. '
+            'Double-line black borders, no empty space, every gap filled with fine '
+            'crosshatch or dot patterns, handpainted on handmade paper.'
         ),
     },
     'pattachitra': {
@@ -49,9 +65,13 @@ STYLES = {
         'desc': 'Odisha scroll painting',
         'origin': 'Odisha, India',
         'prompt': (
-            'Transform this into a Pattachitra painting from Odisha, India. '
-            'Rich red, yellow and black palette, intricate fine-line details, '
-            'mythological figures, floral borders, traditional scroll painting style.'
+            'Transform into Odisha Pattachitra folk painting. '
+            'Fine black pen outlines, flat natural pigments in deep red, golden yellow, '
+            'black and white. '
+            'Decorative floral and creeper scroll border framing the entire image. '
+            'Traditional mythological figures with elongated eyes and stylized gestures. '
+            'No perspective or shadow, every detail outlined in black, '
+            'rich textile-like surface, traditional scroll painting style.'
         ),
     },
     'gond': {
@@ -59,9 +79,13 @@ STYLES = {
         'desc': 'Madhya Pradesh tribal art',
         'origin': 'Madhya Pradesh, India',
         'prompt': (
-            'Transform this into Gond tribal art from Madhya Pradesh, India. '
-            'Intricate dot and dash patterns filling every shape, bright earthy colors, '
-            'animals and nature rendered in dense repetitive marks, folk painting style.'
+            'Transform into Gond tribal art from Madhya Pradesh India. '
+            'Every shape filled with dense repetitive patterns of tiny dots, dashes '
+            'and parallel lines creating texture and movement. '
+            'Bold earthy palette — cadmium red, canary yellow, cobalt blue, forest green '
+            'on black background. '
+            'Animals, trees and figures dissolved into intricate mark-making, '
+            'flat graphic style, no shading or photographic realism.'
         ),
     },
     'kalamkari': {
@@ -69,9 +93,12 @@ STYLES = {
         'desc': 'Andhra Pradesh pen art',
         'origin': 'Andhra Pradesh, India',
         'prompt': (
-            'Transform this into Kalamkari art from Andhra Pradesh, India. '
-            'Hand-drawn pen and vegetable dye style, earthy indigo, red and black tones, '
-            'mythological narrative figures, flowing lines and nature motifs.'
+            'Transform into Srikalahasti Kalamkari pen art from Andhra Pradesh India. '
+            'Hand-drawn flowing black outlines, flat vegetable dye fills in indigo blue, '
+            'brick red, mustard yellow, forest green and black. '
+            'Narrative mythological figures with elaborate headdresses and jewellery. '
+            'Fine floral vine borders, no photographic realism, '
+            'fully hand-illustrated folk art look.'
         ),
     },
 }
@@ -87,9 +114,9 @@ def run_via_colab(src_path: Path, style: str, out_path: Path) -> Path:
     result = client.predict(
         image=handle_file(str(src_path)),
         prompt=STYLES[style]['prompt'],
-        image_guidance=1.5,
-        guidance=7.5,
-        steps=25,
+        strength=INFERENCE_CONFIG['strength'],
+        guidance=INFERENCE_CONFIG['guidance_scale'],
+        steps=INFERENCE_CONFIG['num_inference_steps'],
         api_name="/predict",
     )
     Image.open(result).save(out_path)
@@ -107,9 +134,9 @@ def run_via_horde(src_path: Path, style: str, out_path: Path) -> Path:
     payload = {
         "prompt": STYLES[style]['prompt'],
         "params": {
-            "steps": 30,
-            "cfg_scale": 10,
-            "denoising_strength": 0.5,
+            "steps": INFERENCE_CONFIG['num_inference_steps'],
+            "cfg_scale": INFERENCE_CONFIG['guidance_scale'],
+            "denoising_strength": INFERENCE_CONFIG['strength'],
             "width": 512,
             "height": 512,
             "sampler_name": "k_euler_a",
