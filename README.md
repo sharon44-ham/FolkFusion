@@ -20,7 +20,7 @@ Upload an image → choose a traditional art form → get back your image reinte
 
 - Built with **Flask** (Python)
 - Two backends supported:
-  - **Google Colab** (recommended) — runs `instruct-pix2pix` on a free T4 GPU, exposed via Gradio
+  - **Google Colab** (recommended) — runs Stable Diffusion img2img on a free T4 GPU, exposed via Gradio
   - **Stable Horde** (fallback) — free volunteer GPU network, no setup needed
 - If `COLAB_URL` is set in `.env`, Colab is used. Otherwise falls back to Stable Horde automatically.
 
@@ -51,7 +51,7 @@ Open `http://localhost:5000`
 
 1. Upload `colab_server.ipynb` to [Google Colab](https://colab.research.google.com)
 2. Set runtime to **T4 GPU** (Runtime → Change runtime type)
-3. Run both cells — takes ~5 minutes to load the model
+3. Run Cell 1 (~2 min to install deps), then Cell 2 (~3 min to load `runwayml/stable-diffusion-v1-5`)
 4. Copy the `gradio.live` URL printed at the end
 5. Paste it into `.env` as `COLAB_URL=https://xxxx.gradio.live`
 6. Restart Flask
